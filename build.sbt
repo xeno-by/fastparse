@@ -19,19 +19,20 @@ def macroDependencies(version: String) =
 val shared = Seq(
   libraryDependencies ++= macroDependencies(scalaVersion.value),
   libraryDependencies ++= Seq(
-    "com.lihaoyi" %%% "utest" % "0.5.4" % "test",
-    "com.lihaoyi" %%% "sourcecode" % "0.1.4"
+    // "com.lihaoyi" %%% "utest" % "0.5.4" % "test",
+    "com.github.xenoby" %%% "sourcecode" % "0.1.4"
   ),
   scalaJSStage in Global := FullOptStage,
-  organization := "com.lihaoyi",
+  organization := "com.github.xenoby",
   version := Constants.version,
-  scalaVersion := Constants.scala212,
+  scalaVersion := Constants.scala211,
   crossScalaVersions := Seq(Constants.scala210, Constants.scala211, Constants.scala212),
   libraryDependencies += "com.lihaoyi" %% "acyclic" % "0.1.5" % "provided",
   addCompilerPlugin("com.lihaoyi" %% "acyclic" % "0.1.5"),
   autoCompilerPlugins := true,
   testFrameworks += new TestFramework("utest.runner.Framework"),
   publishTo := Some("releases" at "https://oss.sonatype.org/service/local/staging/deploy/maven2"),
+  resolvers += "Sonatype staging" at "https://oss.sonatype.org/content/repositories/staging",
   pomExtra :=
     <url>https://github.com/lihaoyi/scala-parser</url>
       <licenses>
@@ -50,7 +51,13 @@ val shared = Seq(
           <name>Li Haoyi</name>
           <url>https://github.com/lihaoyi</url>
         </developer>
-      </developers>
+      </developers>,
+  credentials ++= {
+    lazy val credentials = sys.props("credentials")
+    val credentialsFile = if (credentials != null) new File(credentials) else null
+    if (credentialsFile != null) List(new FileCredentials(credentialsFile))
+    else Nil
+  }
 )
 
 lazy val nativeSettings = Seq(
@@ -90,7 +97,7 @@ lazy val fastparse = crossProject(JSPlatform, JVMPlatform, NativePlatform)
     shared,
     name := "fastparse",
     sourceGenerators in Compile += Def.task {
-      val dir = (sourceManaged in Compile).value 
+      val dir = (sourceManaged in Compile).value
       val file = dir/"fastparse"/"core"/"SequencerGen.scala"
       // Only go up to 21, because adding the last element makes it 22
       val tuples = (2 to 21).map{ i =>
